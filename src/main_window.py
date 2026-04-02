@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import (
     QSystemTrayIcon, QMenu, QAction, QMessageBox, QInputDialog,
     QDialog, QLabel, QScrollArea, QFrame
 )
-from PyQt5.QtCore import Qt, QEvent, QTimer
+from PyQt5.QtCore import Qt, QEvent, QTimer, QObject
 from PyQt5.QtGui import QColor, QPen, QIcon, QPainter, QPixmap
 from PyQt5.QtWidgets import QGraphicsDropShadowEffect
 
@@ -263,11 +263,14 @@ class InputWindow(QWidget):
         dialog.setWindowTitle('搜索引擎列表')
         dialog.setMinimumSize(600, 400)
         dialog.setModal(True)
+        # 移除窗口标题栏，使用自定义顶栏
+        dialog.setWindowFlags(dialog.windowFlags() | Qt.FramelessWindowHint)
         
         # 设置对话框样式
         dialog.setStyleSheet('''
             QDialog {
                 background-color: #1E1E2E;
+                border: 1px solid #3D3D4D;
             }
             QLabel {
                 color: #FFFFFF;
@@ -296,14 +299,20 @@ class InputWindow(QWidget):
             }
         ''')
         
-        layout = QVBoxLayout()
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(15)
+        # 主布局
+        main_layout = QVBoxLayout()
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(15)
         
         # 标题
-        title_label = QLabel('🔍 可用的搜索引擎')
+        title_label = QLabel('🔍 搜索引擎列表')
         title_label.setStyleSheet('font-size: 18px; font-weight: bold; color: #00BFFF;')
-        layout.addWidget(title_label)
+        main_layout.addWidget(title_label)
+        
+        # 内容区域
+        content_layout = QVBoxLayout()
+        content_layout.setContentsMargins(0, 0, 0, 0)
+        content_layout.setSpacing(10)
         
         engines = self.engine_manager.list_engines()
         if not engines:
@@ -353,10 +362,10 @@ class InputWindow(QWidget):
                 content_layout.addWidget(engine_frame)
             
             content_widget.setLayout(content_layout)
-            scroll.setWidget(content_widget)
-            layout.addWidget(scroll)
+        scroll.setWidget(content_widget)
+        main_layout.addWidget(scroll)
         
-        dialog.setLayout(layout)
+        dialog.setLayout(main_layout)
         dialog.exec_()
     
     def show_help_dialog(self):
@@ -365,11 +374,14 @@ class InputWindow(QWidget):
         dialog.setWindowTitle('使用帮助')
         dialog.setMinimumSize(700, 550)
         dialog.setModal(True)
+        # 移除窗口标题栏，使用自定义顶栏
+        dialog.setWindowFlags(dialog.windowFlags() | Qt.FramelessWindowHint)
         
         # 设置对话框样式
         dialog.setStyleSheet('''
             QDialog {
                 background-color: #1E1E2E;
+                border: 1px solid #3D3D4D;
             }
             QLabel {
                 color: #FFFFFF;
@@ -398,14 +410,20 @@ class InputWindow(QWidget):
             }
         ''')
         
-        layout = QVBoxLayout()
-        layout.setContentsMargins(25, 25, 25, 25)
-        layout.setSpacing(15)
+        # 主布局
+        main_layout = QVBoxLayout()
+        main_layout.setContentsMargins(25, 25, 25, 25)
+        main_layout.setSpacing(15)
         
         # 标题
-        title_label = QLabel('📖 使用说明')
-        title_label.setStyleSheet('font-size: 20px; font-weight: bold; color: #00BFFF;')
-        layout.addWidget(title_label)
+        title_label = QLabel('📖 使用帮助')
+        title_label.setStyleSheet('font-size: 18px; font-weight: bold; color: #00BFFF;')
+        main_layout.addWidget(title_label)
+        
+        # 内容区域
+        content_layout = QVBoxLayout()
+        content_layout.setContentsMargins(0, 0, 0, 0)
+        content_layout.setSpacing(10)
         
         # 创建滚动区域
         scroll = QScrollArea()
@@ -459,9 +477,9 @@ class InputWindow(QWidget):
         
         content_widget.setLayout(content_layout)
         scroll.setWidget(content_widget)
-        layout.addWidget(scroll)
+        main_layout.addWidget(scroll)
         
-        dialog.setLayout(layout)
+        dialog.setLayout(main_layout)
         dialog.exec_()
     
     def _create_help_section(self, title, items):
@@ -505,6 +523,40 @@ class InputWindow(QWidget):
         
         section_frame.setLayout(section_layout)
         return section_frame
+    
+    def _make_dialog_draggable(self, dialog, title_bar):
+        """使对话框可以通过标题栏拖动"""
+        # 使用实例变量存储拖动位置
+        dialog._drag_pos = None
+        
+        def mousePressEvent(event):
+            if event.button() == Qt.LeftButton:
+                dialog._drag_pos = event.globalPos() - dialog.frameGeometry().topLeft()
+                event.accept()
+        
+        def mouseMoveEvent(event):
+            if event.buttons() == Qt.LeftButton and dialog._drag_pos is not None:
+                dialog.move(event.globalPos() - dialog._drag_pos)
+                event.accept()
+        
+        def mouseReleaseEvent(event):
+            dialog._drag_pos = None
+        
+        # 使用事件过滤器而不是直接替换方法
+        class DragFilter(QObject):
+            def eventFilter(self, obj, event):
+                if event.type() == QEvent.MouseButtonPress:
+                    mousePressEvent(event)
+                elif event.type() == QEvent.MouseMove:
+                    mouseMoveEvent(event)
+                elif event.type() == QEvent.MouseButtonRelease:
+                    mouseReleaseEvent(event)
+                return False
+        
+        drag_filter = DragFilter(title_bar)
+        title_bar.installEventFilter(drag_filter)
+        # 保存过滤器引用，防止被垃圾回收
+        dialog._drag_filter = drag_filter
     
     def toggleVisibility(self):
         """切换窗口显示/隐藏状态"""
