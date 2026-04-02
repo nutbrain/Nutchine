@@ -7,7 +7,7 @@ import ctypes
 from ctypes import wintypes
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QLineEdit, QVBoxLayout, QDesktopWidget, 
-    QSystemTrayIcon, QMenu, QAction
+    QSystemTrayIcon, QMenu, QAction, QMessageBox, QInputDialog
 )
 from PyQt5.QtCore import Qt, QEvent, QTimer
 from PyQt5.QtGui import QColor, QPen, QIcon, QPainter, QPixmap
@@ -82,7 +82,7 @@ class InputWindow(QWidget):
         self.setLayout(layout)
         
         self.input_box.returnPressed.connect(self.on_return_pressed)
-        self.input_box.editingFinished.connect(self.hide)
+        # 注意：不使用 editingFinished，因为弹窗会导致失去焦点
         
         # 启动炫彩边框更新定时器
         self.gradient_angle = 0
@@ -224,8 +224,7 @@ class InputWindow(QWidget):
         
         # 检查是否是列出引擎命令
         if text.lower() == 'listengines':
-            engines = self.engine_manager.list_engines()
-            print(f"Available engines: {', '.join(engines)}")
+            self.show_engines_dialog()
             return
         
         # 默认使用第一个搜索引擎（google）
@@ -251,6 +250,22 @@ class InputWindow(QWidget):
             self.hide()
         else:
             print(f"Engine '{engine_name}' not found. Available engines: {', '.join(self.engine_manager.list_engines())}")
+    
+    def show_engines_dialog(self):
+        """显示搜索引擎列表弹窗"""
+        engines = self.engine_manager.list_engines()
+        if not engines:
+            QMessageBox.information(self, '搜索引擎列表', '暂无搜索引擎')
+            return
+        
+        # 构建引擎列表文本
+        engine_list = []
+        for name in engines:
+            url = self.engine_manager.get_engine(name)
+            engine_list.append(f"{name}: {url}")
+        
+        message = '\n'.join(engine_list)
+        QMessageBox.information(self, '搜索引擎列表', f'可用的搜索引擎：\n\n{message}')
     
     def toggleVisibility(self):
         """切换窗口显示/隐藏状态"""
