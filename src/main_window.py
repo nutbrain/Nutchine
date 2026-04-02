@@ -1,106 +1,25 @@
-import sys
+"""
+主窗口模块
+包含输入窗口的主界面逻辑
+"""
+
 import ctypes
-import json
-import os
-import webbrowser
 from ctypes import wintypes
-from PyQt5.QtWidgets import QApplication, QWidget, QLineEdit, QVBoxLayout, QDesktopWidget, QSystemTrayIcon, QMenu, QAction
-from PyQt5.QtCore import Qt, QCoreApplication, QEvent, QObject, QPropertyAnimation, QEasingCurve
+from PyQt5.QtWidgets import (
+    QApplication, QWidget, QLineEdit, QVBoxLayout, QDesktopWidget, 
+    QSystemTrayIcon, QMenu, QAction
+)
+from PyQt5.QtCore import Qt, QEvent, QTimer
+from PyQt5.QtGui import QColor, QPen, QIcon, QPainter, QPixmap
 from PyQt5.QtWidgets import QGraphicsDropShadowEffect
-from PyQt5.QtGui import QKeySequence, QIcon, QPainter, QPixmap, QColor, QPen
 
-# Windows API 常量
-WM_HOTKEY = 0x0312
-MOD_ALT = 0x0001
-VK_F = 0x46
+from .engine_manager import EngineManager
+from .utils import WM_HOTKEY, MOD_ALT, VK_F
 
-# 用于单实例的互斥量名称
-MUTEX_NAME = 'InputWindow_SingleInstance_Mutex'
-
-# 搜索引擎配置文件路径
-ENGINE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.engine.json')
-
-class EngineManager:
-    """搜索引擎管理器"""
-    def __init__(self):
-        self.engines = {}
-        self.load_engines()
-    
-    def load_engines(self):
-        """加载搜索引擎配置"""
-        try:
-            if os.path.exists(ENGINE_FILE):
-                with open(ENGINE_FILE, 'r', encoding='utf-8') as f:
-                    self.engines = json.load(f)
-        except Exception as e:
-            print(f"Error loading engines: {e}")
-            self.engines = {}
-    
-    def save_engines(self):
-        """保存搜索引擎配置"""
-        try:
-            with open(ENGINE_FILE, 'w', encoding='utf-8') as f:
-                json.dump(self.engines, f, indent=4, ensure_ascii=False)
-        except Exception as e:
-            print(f"Error saving engines: {e}")
-    
-    def add_engine(self, name, url):
-        """添加搜索引擎"""
-        self.engines[name] = url
-        self.save_engines()
-    
-    def del_engine(self, name):
-        """删除搜索引擎"""
-        if name in self.engines:
-            del self.engines[name]
-            self.save_engines()
-            return True
-        return False
-    
-    def get_engine(self, name):
-        """获取搜索引擎 URL"""
-        return self.engines.get(name)
-    
-    def list_engines(self):
-        """列出所有搜索引擎"""
-        return list(self.engines.keys())
-
-def kill_existing_instance():
-    """查找并关闭已存在的实例"""
-    try:
-        # 枚举所有进程
-        import psutil
-        import os
-        
-        current_pid = ctypes.windll.kernel32.GetCurrentProcessId()
-        current_script = os.path.abspath(__file__)
-        
-        for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
-            try:
-                # 检查是否是同一个程序
-                if proc.info['pid'] != current_pid:
-                    p = psutil.Process(proc.info['pid'])
-                    cmdline = p.cmdline()
-                    
-                    # 检查命令行是否包含相同的脚本路径
-                    if len(cmdline) > 1:
-                        # 检查最后一个参数是否是我们的脚本
-                        script_path = cmdline[-1] if cmdline else ''
-                        if 'input_window.py' in script_path:
-                            print(f"Killing existing instance (PID: {proc.info['pid']})")
-                            proc.terminate()
-                            try:
-                                proc.wait(timeout=3)
-                            except psutil.TimeoutExpired:
-                                proc.kill()
-            except (psutil.NoSuchProcess, psutil.AccessDenied):
-                pass
-    except ImportError:
-        print("psutil not installed, skipping instance check")
-    except Exception as e:
-        print(f"Error checking instances: {e}")
 
 class InputWindow(QWidget):
+    """输入窗口类"""
+    
     def __init__(self):
         super().__init__()
         # 初始化搜索引擎管理器
@@ -112,6 +31,7 @@ class InputWindow(QWidget):
         self.initTrayIcon()
     
     def initUI(self):
+        """初始化用户界面"""
         self.setWindowTitle('输入窗口')
         self.setGeometry(0, 0, 900, 120)
         
@@ -132,7 +52,7 @@ class InputWindow(QWidget):
         
         self.input_box = QLineEdit()
         self.input_box.setPlaceholderText('请输入内容...')
-        # 设置输入框样式 - 基础样式
+        # 设置输入框样式
         self.input_box.setStyleSheet('''
             QLineEdit {
                 background-color: rgba(30, 30, 40, 240);
@@ -158,11 +78,6 @@ class InputWindow(QWidget):
         shadow_effect.setOffset(0, 0)
         self.input_box.setGraphicsEffect(shadow_effect)
         
-        # 创建渐变动画
-        self.gradient_animation = QPropertyAnimation(self.input_box, b"geometry")
-        self.gradient_animation.setDuration(2000)
-        self.gradient_animation.setEasingCurve(QEasingCurve.InOutSine)
-        
         layout.addWidget(self.input_box)
         self.setLayout(layout)
         
@@ -171,7 +86,6 @@ class InputWindow(QWidget):
         
         # 启动炫彩边框更新定时器
         self.gradient_angle = 0
-        from PyQt5.QtCore import QTimer
         self.gradient_timer = QTimer()
         self.gradient_timer.timeout.connect(self.update_gradient_border)
         self.gradient_timer.start(50)  # 每 50ms 更新一次
@@ -204,7 +118,7 @@ class InputWindow(QWidget):
         self.input_box.setStyleSheet(gradient_style)
     
     def createMagnifierIcon(self):
-        # 创建自定义放大镜图标
+        """创建自定义放大镜图标"""
         pixmap = QPixmap(32, 32)
         pixmap.fill(Qt.transparent)
         
@@ -224,7 +138,7 @@ class InputWindow(QWidget):
         return QIcon(pixmap)
     
     def register_hotkey(self):
-        # 获取窗口句柄
+        """注册全局热键"""
         hwnd = int(self.winId())
         # 注册 Alt+F 热键
         result = ctypes.windll.user32.RegisterHotKey(
@@ -236,7 +150,7 @@ class InputWindow(QWidget):
             print("Hotkey registered successfully")
     
     def initTrayIcon(self):
-        # 创建托盘图标
+        """初始化托盘图标"""
         self.tray_icon = QSystemTrayIcon(self)
         # 使用自定义的放大镜图标
         self.tray_icon.setIcon(self.createMagnifierIcon())
@@ -264,6 +178,7 @@ class InputWindow(QWidget):
         self.tray_icon.show()
     
     def on_return_pressed(self):
+        """处理回车键事件"""
         text = self.input_box.text()
         self.input_box.clear()
         
@@ -321,10 +236,12 @@ class InputWindow(QWidget):
     
     def search_with_engine(self, engine_name, query):
         """使用指定的搜索引擎搜索"""
+        import webbrowser
+        import urllib.parse
+        
         url_template = self.engine_manager.get_engine(engine_name)
         if url_template:
             # 替换 {query} 为实际的搜索词
-            import urllib.parse
             encoded_query = urllib.parse.quote(query)
             url = url_template.replace('{query}', encoded_query)
             print(f"Searching with {engine_name}: {url}")
@@ -336,6 +253,7 @@ class InputWindow(QWidget):
             print(f"Engine '{engine_name}' not found. Available engines: {', '.join(self.engine_manager.list_engines())}")
     
     def toggleVisibility(self):
+        """切换窗口显示/隐藏状态"""
         if self.isVisible():
             self.hide()
         else:
@@ -346,7 +264,7 @@ class InputWindow(QWidget):
             self.input_box.activateWindow()
     
     def nativeEvent(self, eventType, message):
-        # 处理 Windows 消息
+        """处理 Windows 原生事件"""
         if eventType == 'windows_generic_MSG':
             # 获取消息指针
             ptr = int(message)
@@ -357,16 +275,7 @@ class InputWindow(QWidget):
         return super().nativeEvent(eventType, message)
     
     def closeEvent(self, event):
+        """处理窗口关闭事件"""
         # 注销热键
         ctypes.windll.user32.UnregisterHotKey(None, 1)
         super().closeEvent(event)
-
-if __name__ == '__main__':
-    # 先关闭已存在的实例
-    kill_existing_instance()
-    
-    app = QApplication(sys.argv)
-    window = InputWindow()
-    # 启动时默认隐藏
-    window.hide()
-    sys.exit(app.exec_())
