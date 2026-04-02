@@ -112,10 +112,12 @@ class InputWindow(QWidget):
     
     def initUI(self):
         self.setWindowTitle('输入窗口')
-        self.setGeometry(0, 0, 400, 100)
+        self.setGeometry(0, 0, 900, 120)
         
-        # 设置窗口永远在顶层
-        self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+        # 设置无边框窗口
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
+        # 设置窗口背景透明
+        self.setAttribute(Qt.WA_TranslucentBackground)
         
         # 移动到屏幕中心
         qr = self.frameGeometry()
@@ -123,15 +125,31 @@ class InputWindow(QWidget):
         qr.moveCenter(cp)
         self.move(qr.topLeft())
         
+        # 创建布局，设置边距
         layout = QVBoxLayout()
+        layout.setContentsMargins(15, 15, 15, 15)
         
         self.input_box = QLineEdit()
         self.input_box.setPlaceholderText('请输入内容...')
+        # 设置输入框样式
+        self.input_box.setStyleSheet('''
+            QLineEdit {
+                background-color: rgba(255, 255, 255, 250);
+                border: 3px solid #333;
+                border-radius: 16px;
+                padding: 20px 25px;
+                font-size: 28px;
+            }
+            QLineEdit:focus {
+                border: 3px solid #0078D7;
+            }
+        ''')
         
         layout.addWidget(self.input_box)
         self.setLayout(layout)
         
         self.input_box.returnPressed.connect(self.on_return_pressed)
+        self.input_box.editingFinished.connect(self.hide)
     
     def createMagnifierIcon(self):
         # 创建自定义放大镜图标
