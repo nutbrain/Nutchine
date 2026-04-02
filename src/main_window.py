@@ -7,7 +7,8 @@ import ctypes
 from ctypes import wintypes
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QLineEdit, QVBoxLayout, QDesktopWidget, 
-    QSystemTrayIcon, QMenu, QAction, QMessageBox, QInputDialog
+    QSystemTrayIcon, QMenu, QAction, QMessageBox, QInputDialog,
+    QDialog, QLabel, QScrollArea, QFrame
 )
 from PyQt5.QtCore import Qt, QEvent, QTimer
 from PyQt5.QtGui import QColor, QPen, QIcon, QPainter, QPixmap
@@ -258,50 +259,252 @@ class InputWindow(QWidget):
     
     def show_engines_dialog(self):
         """显示搜索引擎列表弹窗"""
+        dialog = QDialog(self)
+        dialog.setWindowTitle('搜索引擎列表')
+        dialog.setMinimumSize(600, 400)
+        dialog.setModal(True)
+        
+        # 设置对话框样式
+        dialog.setStyleSheet('''
+            QDialog {
+                background-color: #1E1E2E;
+            }
+            QLabel {
+                color: #FFFFFF;
+                font-size: 14px;
+                padding: 5px;
+            }
+            QScrollArea {
+                border: none;
+                background-color: #1E1E2E;
+            }
+            QScrollBar:vertical {
+                background-color: #2D2D3D;
+                width: 12px;
+                border-radius: 6px;
+            }
+            QScrollBar::handle:vertical {
+                background-color: #4A4A5A;
+                border-radius: 6px;
+                min-height: 20px;
+            }
+            QScrollBar::handle:vertical:hover {
+                background-color: #5A5A6A;
+            }
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                height: 0px;
+            }
+        ''')
+        
+        layout = QVBoxLayout()
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(15)
+        
+        # 标题
+        title_label = QLabel('🔍 可用的搜索引擎')
+        title_label.setStyleSheet('font-size: 18px; font-weight: bold; color: #00BFFF;')
+        layout.addWidget(title_label)
+        
         engines = self.engine_manager.list_engines()
         if not engines:
-            QMessageBox.information(self, '搜索引擎列表', '暂无搜索引擎')
-            return
+            info_label = QLabel('暂无搜索引擎')
+            info_label.setStyleSheet('color: #888; font-size: 16px;')
+            layout.addWidget(info_label)
+        else:
+            # 创建滚动区域
+            scroll = QScrollArea()
+            scroll.setWidgetResizable(True)
+            scroll.setFrameShape(QFrame.NoFrame)
+            
+            # 内容容器
+            content_widget = QWidget()
+            content_layout = QVBoxLayout()
+            content_layout.setSpacing(10)
+            
+            for name in engines:
+                url = self.engine_manager.get_engine(name)
+                # 引擎项
+                engine_frame = QFrame()
+                engine_frame.setStyleSheet('''
+                    QFrame {
+                        background-color: #2D2D3D;
+                        border-radius: 8px;
+                        padding: 10px;
+                    }
+                    QFrame:hover {
+                        background-color: #3D3D4D;
+                    }
+                ''')
+                engine_layout = QVBoxLayout()
+                engine_layout.setSpacing(5)
+                
+                # 引擎名称
+                name_label = QLabel(f'🌐 <b>{name}</b>')
+                name_label.setStyleSheet('color: #00BFFF; font-size: 16px;')
+                
+                # 引擎 URL
+                url_label = QLabel(url)
+                url_label.setStyleSheet('color: #AAA; font-size: 13px;')
+                url_label.setWordWrap(True)
+                
+                engine_layout.addWidget(name_label)
+                engine_layout.addWidget(url_label)
+                engine_frame.setLayout(engine_layout)
+                content_layout.addWidget(engine_frame)
+            
+            content_widget.setLayout(content_layout)
+            scroll.setWidget(content_widget)
+            layout.addWidget(scroll)
         
-        # 构建引擎列表文本
-        engine_list = []
-        for name in engines:
-            url = self.engine_manager.get_engine(name)
-            engine_list.append(f"{name}: {url}")
-        
-        message = '\n'.join(engine_list)
-        QMessageBox.information(self, '搜索引擎列表', f'可用的搜索引擎：\n\n{message}')
+        dialog.setLayout(layout)
+        dialog.exec_()
     
     def show_help_dialog(self):
         """显示帮助信息弹窗"""
-        help_text = """使用说明：
-
-【搜索功能】
-• 使用指定搜索引擎：engine_name 搜索内容
-  示例：google python 教程
-  示例：baidu 人工智能
-  示例：bing machine learning
-
-• 默认搜索：直接输入文字
-  示例：python tutorial
-
-【引擎管理】
-• 添加引擎：addengine 名称 URL
-  示例：addengine github https://github.com/search?q={query}
-
-• 删除引擎：delengine 名称
-  示例：delengine github
-
-• 列出引擎：listengines
-
-【快捷键】
-• Alt+F：显示/隐藏窗口
-
-【其他】
-• help：显示此帮助信息
-• 回车：执行搜索或命令"""
+        dialog = QDialog(self)
+        dialog.setWindowTitle('使用帮助')
+        dialog.setMinimumSize(700, 550)
+        dialog.setModal(True)
         
-        QMessageBox.information(self, '使用帮助', help_text)
+        # 设置对话框样式
+        dialog.setStyleSheet('''
+            QDialog {
+                background-color: #1E1E2E;
+            }
+            QLabel {
+                color: #FFFFFF;
+                font-size: 14px;
+                padding: 5px;
+            }
+            QScrollArea {
+                border: none;
+                background-color: #1E1E2E;
+            }
+            QScrollBar:vertical {
+                background-color: #2D2D3D;
+                width: 12px;
+                border-radius: 6px;
+            }
+            QScrollBar::handle:vertical {
+                background-color: #4A4A5A;
+                border-radius: 6px;
+                min-height: 20px;
+            }
+            QScrollBar::handle:vertical:hover {
+                background-color: #5A5A6A;
+            }
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                height: 0px;
+            }
+        ''')
+        
+        layout = QVBoxLayout()
+        layout.setContentsMargins(25, 25, 25, 25)
+        layout.setSpacing(15)
+        
+        # 标题
+        title_label = QLabel('📖 使用说明')
+        title_label.setStyleSheet('font-size: 20px; font-weight: bold; color: #00BFFF;')
+        layout.addWidget(title_label)
+        
+        # 创建滚动区域
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.NoFrame)
+        
+        # 内容容器
+        content_widget = QWidget()
+        content_layout = QVBoxLayout()
+        content_layout.setSpacing(20)
+        
+        # 搜索功能
+        search_section = self._create_help_section(
+            '🔎 搜索功能',
+            [
+                ('使用指定搜索引擎', 'engine_name 搜索内容', ['google python 教程', 'baidu 人工智能', 'bing machine learning']),
+                ('默认搜索', '直接输入文字', ['python tutorial'])
+            ]
+        )
+        content_layout.addWidget(search_section)
+        
+        # 引擎管理
+        engine_section = self._create_help_section(
+            '⚙️ 引擎管理',
+            [
+                ('添加引擎', 'addengine 名称 URL', ['addengine github https://github.com/search?q={query}']),
+                ('删除引擎', 'delengine 名称', ['delengine github']),
+                ('列出引擎', 'listengines', [])
+            ]
+        )
+        content_layout.addWidget(engine_section)
+        
+        # 快捷键
+        shortcut_section = self._create_help_section(
+            '⌨️ 快捷键',
+            [
+                ('显示/隐藏窗口', 'Alt+F', [])
+            ]
+        )
+        content_layout.addWidget(shortcut_section)
+        
+        # 其他
+        other_section = self._create_help_section(
+            'ℹ️ 其他',
+            [
+                ('显示帮助', 'help', []),
+                ('执行搜索', '回车键', [])
+            ]
+        )
+        content_layout.addWidget(other_section)
+        
+        content_widget.setLayout(content_layout)
+        scroll.setWidget(content_widget)
+        layout.addWidget(scroll)
+        
+        dialog.setLayout(layout)
+        dialog.exec_()
+    
+    def _create_help_section(self, title, items):
+        """创建帮助章节"""
+        section_frame = QFrame()
+        section_frame.setStyleSheet('''
+            QFrame {
+                background-color: #2D2D3D;
+                border-radius: 10px;
+                padding: 15px;
+            }
+        ''')
+        
+        section_layout = QVBoxLayout()
+        section_layout.setSpacing(12)
+        
+        # 章节标题
+        title_label = QLabel(title)
+        title_label.setStyleSheet('font-size: 16px; font-weight: bold; color: #00BFFF;')
+        section_layout.addWidget(title_label)
+        
+        # 章节内容
+        for item_name, desc, examples in items:
+            item_layout = QVBoxLayout()
+            item_layout.setSpacing(5)
+            
+            # 项目名称和描述
+            item_label = QLabel(f'• <b>{item_name}</b>: {desc}')
+            item_label.setStyleSheet('color: #DDD; font-size: 14px;')
+            item_label.setWordWrap(True)
+            item_layout.addWidget(item_label)
+            
+            # 示例
+            if examples:
+                for example in examples:
+                    example_label = QLabel(f'  示例：{example}')
+                    example_label.setStyleSheet('color: #888; font-size: 13px; margin-left: 20px;')
+                    item_layout.addWidget(example_label)
+            
+            section_layout.addLayout(item_layout)
+        
+        section_frame.setLayout(section_layout)
+        return section_frame
     
     def toggleVisibility(self):
         """切换窗口显示/隐藏状态"""
