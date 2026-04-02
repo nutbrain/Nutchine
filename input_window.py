@@ -5,7 +5,8 @@ import os
 import webbrowser
 from ctypes import wintypes
 from PyQt5.QtWidgets import QApplication, QWidget, QLineEdit, QVBoxLayout, QDesktopWidget, QSystemTrayIcon, QMenu, QAction
-from PyQt5.QtCore import Qt, QCoreApplication, QEvent, QObject
+from PyQt5.QtCore import Qt, QCoreApplication, QEvent, QObject, QPropertyAnimation, QEasingCurve
+from PyQt5.QtWidgets import QGraphicsDropShadowEffect
 from PyQt5.QtGui import QKeySequence, QIcon, QPainter, QPixmap, QColor, QPen
 
 # Windows API 常量
@@ -131,25 +132,76 @@ class InputWindow(QWidget):
         
         self.input_box = QLineEdit()
         self.input_box.setPlaceholderText('请输入内容...')
-        # 设置输入框样式
+        # 设置输入框样式 - 基础样式
         self.input_box.setStyleSheet('''
             QLineEdit {
-                background-color: rgba(255, 255, 255, 250);
-                border: 3px solid #333;
+                background-color: rgba(30, 30, 40, 240);
+                border: 3px solid transparent;
                 border-radius: 16px;
                 padding: 20px 25px;
                 font-size: 28px;
+                color: #FFFFFF;
+                selection-background-color: #0078D7;
             }
             QLineEdit:focus {
-                border: 3px solid #0078D7;
+                background-color: rgba(40, 40, 55, 245);
+            }
+            QLineEdit::placeholder {
+                color: rgba(200, 200, 200, 150);
             }
         ''')
+        
+        # 添加光晕效果
+        shadow_effect = QGraphicsDropShadowEffect()
+        shadow_effect.setBlurRadius(30)
+        shadow_effect.setColor(QColor(0, 120, 215, 200))
+        shadow_effect.setOffset(0, 0)
+        self.input_box.setGraphicsEffect(shadow_effect)
+        
+        # 创建渐变动画
+        self.gradient_animation = QPropertyAnimation(self.input_box, b"geometry")
+        self.gradient_animation.setDuration(2000)
+        self.gradient_animation.setEasingCurve(QEasingCurve.InOutSine)
         
         layout.addWidget(self.input_box)
         self.setLayout(layout)
         
         self.input_box.returnPressed.connect(self.on_return_pressed)
         self.input_box.editingFinished.connect(self.hide)
+        
+        # 启动炫彩边框更新定时器
+        self.gradient_angle = 0
+        from PyQt5.QtCore import QTimer
+        self.gradient_timer = QTimer()
+        self.gradient_timer.timeout.connect(self.update_gradient_border)
+        self.gradient_timer.start(50)  # 每 50ms 更新一次
+    
+    def update_gradient_border(self):
+        """更新炫彩渐变边框 - 单色时间渐变"""
+        self.gradient_angle = (self.gradient_angle + 1) % 360
+        
+        # 使用单色，但是颜色随时间渐变
+        current_color = f"hsl({self.gradient_angle}, 100%, 50%)"
+        
+        gradient_style = f"""
+            QLineEdit {{
+                background-color: rgba(30, 30, 40, 240);
+                border: 3px solid {current_color};
+                border-radius: 16px;
+                padding: 20px 25px;
+                font-size: 28px;
+                color: #FFFFFF;
+                selection-background-color: #0078D7;
+            }}
+            QLineEdit:focus {{
+                background-color: rgba(40, 40, 55, 245);
+                border: 3px solid {current_color};
+            }}
+            QLineEdit::placeholder {{
+                color: rgba(200, 200, 200, 150);
+            }}
+        """
+        self.input_box.setStyleSheet(gradient_style)
     
     def createMagnifierIcon(self):
         # 创建自定义放大镜图标
