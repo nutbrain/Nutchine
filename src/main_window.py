@@ -227,6 +227,11 @@ class InputWindow(QWidget):
             self.show_engines_dialog()
             return
         
+        # 检查是否是帮助命令
+        if text.lower() == 'help':
+            self.show_help_dialog()
+            return
+        
         # 默认使用第一个搜索引擎（google）
         engines = self.engine_manager.list_engines()
         if engines:
@@ -266,6 +271,37 @@ class InputWindow(QWidget):
         
         message = '\n'.join(engine_list)
         QMessageBox.information(self, '搜索引擎列表', f'可用的搜索引擎：\n\n{message}')
+    
+    def show_help_dialog(self):
+        """显示帮助信息弹窗"""
+        help_text = """使用说明：
+
+【搜索功能】
+• 使用指定搜索引擎：engine_name 搜索内容
+  示例：google python 教程
+  示例：baidu 人工智能
+  示例：bing machine learning
+
+• 默认搜索：直接输入文字
+  示例：python tutorial
+
+【引擎管理】
+• 添加引擎：addengine 名称 URL
+  示例：addengine github https://github.com/search?q={query}
+
+• 删除引擎：delengine 名称
+  示例：delengine github
+
+• 列出引擎：listengines
+
+【快捷键】
+• Alt+F：显示/隐藏窗口
+
+【其他】
+• help：显示此帮助信息
+• 回车：执行搜索或命令"""
+        
+        QMessageBox.information(self, '使用帮助', help_text)
     
     def toggleVisibility(self):
         """切换窗口显示/隐藏状态"""
