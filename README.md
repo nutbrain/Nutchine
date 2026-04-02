@@ -29,19 +29,29 @@ Nutchine/
 
 ## 安装
 
+### 方式一：源码运行
+
 1. 安装 Python 依赖：
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## 使用方法
-
-### 启动程序
+2. 运行程序：
 
 ```bash
 python main.py
 ```
+
+### 方式二：使用打包后的可执行文件
+
+1. 打包程序：
+
+```bash
+build.bat
+```
+
+2. 打包完成后，在 `dist` 目录中找到 `Nutchine.exe`，可以复制到任意位置直接双击运行。
 
 ### 搜索功能
 
