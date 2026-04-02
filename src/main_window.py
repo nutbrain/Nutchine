@@ -52,7 +52,7 @@ class InputWindow(QWidget):
         layout.setContentsMargins(15, 15, 15, 15)
         
         self.input_box = QLineEdit()
-        self.input_box.setPlaceholderText('请输入内容...')
+        self.input_box.setPlaceholderText('输入搜索内容 或 输入 help 查看帮助')
         # 设置输入框样式
         self.input_box.setStyleSheet('''
             QLineEdit {
