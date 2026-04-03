@@ -10,8 +10,8 @@ from PyQt5.QtWidgets import (
     QSystemTrayIcon, QMenu, QAction, QMessageBox, QInputDialog,
     QDialog, QLabel, QScrollArea, QFrame
 )
-from PyQt5.QtCore import Qt, QEvent, QTimer, QObject
-from PyQt5.QtGui import QColor, QPen, QIcon, QPainter, QPixmap
+from PyQt5.QtCore import Qt, QEvent, QTimer, QObject, QPoint
+from PyQt5.QtGui import QColor, QPen, QIcon, QPainter, QPixmap, QCursor
 from PyQt5.QtWidgets import QGraphicsDropShadowEffect
 
 from .engine_manager import EngineManager
@@ -41,11 +41,8 @@ class InputWindow(QWidget):
         # 设置窗口背景透明
         self.setAttribute(Qt.WA_TranslucentBackground)
         
-        # 移动到屏幕中心
-        qr = self.frameGeometry()
-        cp = QDesktopWidget().availableGeometry().center()
-        qr.moveCenter(cp)
-        self.move(qr.topLeft())
+        # 移动到屏幕中心（初始位置）
+        self.centerOnActiveScreen()
         
         # 创建布局，设置边距
         layout = QVBoxLayout()
@@ -90,6 +87,30 @@ class InputWindow(QWidget):
         self.gradient_timer = QTimer()
         self.gradient_timer.timeout.connect(self.update_gradient_border)
         self.gradient_timer.start(50)  # 每 50ms 更新一次
+    
+    def centerOnActiveScreen(self):
+        """将窗口居中到当前活动的显示器"""
+        # 获取鼠标当前位置
+        cursor_pos = QCursor.pos()
+        
+        # 使用 QDesktopWidget 获取鼠标所在的屏幕
+        desktop = QDesktopWidget()
+        screen_number = desktop.screenNumber(cursor_pos)
+        
+        # 获取该屏幕的几何信息
+        if screen_number >= 0 and screen_number < desktop.screenCount():
+            screen_geometry = desktop.screenGeometry(screen_number)
+        else:
+            # 如果检测失败，使用主屏幕
+            screen_geometry = desktop.availableGeometry()
+        
+        # 计算居中位置
+        qr = self.frameGeometry()
+        cp = screen_geometry.center()
+        qr.moveCenter(cp)
+        
+        # 移动窗口
+        self.move(qr.topLeft())
     
     def update_gradient_border(self):
         """更新炫彩渐变边框 - 单色时间渐变"""
@@ -563,6 +584,8 @@ class InputWindow(QWidget):
         if self.isVisible():
             self.hide()
         else:
+            # 显示前将窗口移动到当前活动屏幕的中心
+            self.centerOnActiveScreen()
             self.show()
             self.activateWindow()
             # 显示后将焦点设置到输入框
