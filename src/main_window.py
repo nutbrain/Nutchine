@@ -224,6 +224,16 @@ class InputWindow(QWidget):
                 self.search_with_engine(engine_name, query)
                 return
         
+        # 如果没有空格分隔（只有 1 个元素），也尝试匹配搜索引擎名称
+        if len(parts) == 1:
+            engine_name = parts[0].strip().lower()
+            
+            # 检查是否是一个有效的搜索引擎名称
+            if engine_name in self.engine_manager.list_engines():
+                # 使用匹配的引擎配合空查询
+                self.search_with_engine(engine_name, '')
+                return
+        
         # 检查是否是添加引擎命令
         if text.lower().startswith('addengine '):
             parts = text[10:].strip().split(' ', 1)
