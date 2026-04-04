@@ -4,5 +4,9 @@
     "baidu": "https://www.baidu.com/s?wd={query}",
     "bing": "https://www.bing.com/search?q={query}",
     "bilibili": "https://search.bilibili.com/all?keyword={query}",
-    "youtube": "https://www.youtube.com/results?search_query={query}"
+    "youtube": "https://www.youtube.com/results?search_query={query}",
+    "yiyan": "https://yiyan.baidu.com/",
+    "gpt": "https://chatgpt.com/",
+    "deepseek": "https://chat.deepseek.com/",
+    "yuanbao": "https://yuanbao.tencent.com/"
 }
