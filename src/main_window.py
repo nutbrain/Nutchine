@@ -14,7 +14,7 @@ from PyQt5.QtCore import Qt, QEvent, QTimer, QObject, QPoint
 from PyQt5.QtGui import QColor, QPen, QIcon, QPainter, QPixmap, QCursor
 from PyQt5.QtWidgets import QGraphicsDropShadowEffect
 
-from .engine_manager import EngineManager
+from .engine_manager import EngineManager, ENGINE_FILE
 from .utils import WM_HOTKEY, MOD_ALT, VK_F
 
 
@@ -495,6 +495,16 @@ class InputWindow(QWidget):
             ]
         )
         content_layout.addWidget(other_section)
+        
+        # 配置文件信息
+        config_section = self._create_help_section(
+            '📁 配置文件',
+            [
+                ('配置文件路径', ENGINE_FILE, []),
+                ('说明', '配置文件保存在 exe 同级目录的 config 文件夹中', [])
+            ]
+        )
+        content_layout.addWidget(config_section)
         
         content_widget.setLayout(content_layout)
         scroll.setWidget(content_widget)

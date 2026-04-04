@@ -1,8 +1,8 @@
 {
     "google": "https://www.google.com/search?q={query}",
+    "gai": "https://www.google.com/search?q={query}&sca_esv=b64da7969411eeee&sxsrf=ANbL-n5LTr34hqdM48eBK3hmbVYgKqJ3jg%3A1775266503817&source=hp&ei=x2rQaeixMPTKkPIPpI-hqQI&iflsig=AFdpzrgAAAAAadB410xt2RhjytImUD6YNgF6Dk-lSTbz&aep=22&udm=50&ved=0ahUKEwiosdyKh9OTAxV0JUQIHaRHKCUQteYPCBE&oq=&gs_lp=Egdnd3Mtd2l6IgBIAFAAWABwAHgAkAEAmAEAoAEAqgEAuAEByAEAmAIAoAIAmAMAkgcAoAcAsgcAuAcAwgcAyAcAgAgB&sclient=gws-wiz",
     "baidu": "https://www.baidu.com/s?wd={query}",
     "bing": "https://www.bing.com/search?q={query}",
     "bilibili": "https://search.bilibili.com/all?keyword={query}",
-    "youtube": "https://www.youtube.com/results?search_query={query}",
-    "gai": "https://www.google.com/search?q={query}&sca_esv=b64da7969411eeee&sxsrf=ANbL-n5LTr34hqdM48eBK3hmbVYgKqJ3jg%3A1775266503817&source=hp&ei=x2rQaeixMPTKkPIPpI-hqQI&iflsig=AFdpzrgAAAAAadB410xt2RhjytImUD6YNgF6Dk-lSTbz&aep=22&udm=50&ved=0ahUKEwiosdyKh9OTAxV0JUQIHaRHKCUQteYPCBE&oq=&gs_lp=Egdnd3Mtd2l6IgBIAFAAWABwAHgAkAEAmAEAoAEAqgEAuAEByAEAmAIAoAIAmAMAkgcAoAcAsgcAuAcAwgcAyAcAgAgB&sclient=gws-wiz"
+    "youtube": "https://www.youtube.com/results?search_query={query}"
 }

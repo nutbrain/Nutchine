@@ -6,9 +6,7 @@ a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[
-        ('config/.engine.json', 'config'),
-    ],
+    datas=[],
     hiddenimports=[
         'PyQt5',
         'psutil',

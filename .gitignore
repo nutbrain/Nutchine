@@ -45,3 +45,7 @@ ENV/
 # Configuration files with sensitive data
 *.key
 *.secret
+
+# Default config file (keep the template, ignore user config)
+config/.engine.json.default
+!config/.engine.json
